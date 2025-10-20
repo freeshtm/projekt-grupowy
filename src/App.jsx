@@ -33,4 +33,4 @@ function App() {
 }
 
 export default App
-// zmiana 
+// zmiana 2 
