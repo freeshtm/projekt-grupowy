@@ -32,9 +32,5 @@ function App() {
   )
 }
 
-<<<<<<< HEAD
-export default App
-=======
 export default App
 // zmiana 2 
->>>>>>> dab3e8c179f9faa5aebe1ba481f42b339884384b
