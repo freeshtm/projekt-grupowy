@@ -3,9 +3,9 @@ import { useUser } from '../context/UserContext';
 import { getUserRides } from '../api/ridesApi';
 import { getUserProfile } from '../api/authApi';
 import './UserPanel.css';
-import { MdStar, MdStarBorder, MdLogout } from 'react-icons/md';
+import { MdStar, MdStarBorder, MdLogout, MdDirectionsCar } from 'react-icons/md';
 
-function UserPanel({ onLogout }) {
+function UserPanel({ onLogout, onManageRide }) {
   const { currentUser } = useUser();
   const [userProfile, setUserProfile] = useState(null);
   const [recentRides, setRecentRides] = useState([]);
@@ -64,17 +64,34 @@ function UserPanel({ onLogout }) {
       </div>
 
       <div className="recent-rides">
-        <h4>Ostatnie Przejazdy</h4>
+        <h4>Twoje Przejazdy</h4>
         {recentRides.length > 0 ? (
           <ul>
             {recentRides.map((ride) => (
-              <li key={ride.id}>
-                <div className="ride-route">
-                  {ride.from_address} → {ride.to_address}
+              <li key={ride.id} className="ride-item-clickable">
+                <div className="ride-content">
+                  <div className="ride-route">
+                    {ride.from_address} → {ride.to_address}
+                  </div>
+                  <div className="ride-date">
+                    {new Date(ride.departure_time).toLocaleDateString('pl-PL')}
+                  </div>
+                  <div className={`ride-status status-${ride.status.toLowerCase()}`}>
+                    {ride.status.toLowerCase() === 'planned' && 'Zaplanowany'}
+                    {ride.status.toLowerCase() === 'in_progress' && 'W trakcie'}
+                    {ride.status.toLowerCase() === 'completed' && 'Zakończony'}
+                    {ride.status.toLowerCase() === 'cancelled' && 'Anulowany'}
+                  </div>
                 </div>
-                <div className="ride-date">
-                  {new Date(ride.departure_time).toLocaleDateString('pl-PL')}
-                </div>
+                {ride.status.toLowerCase() !== 'completed' && ride.status.toLowerCase() !== 'cancelled' && ride.driver_id === currentUser?.id && onManageRide && (
+                  <button 
+                    className="manage-ride-btn"
+                    onClick={() => onManageRide(ride)}
+                    title="Zarządzaj przejazdem"
+                  >
+                    <MdDirectionsCar />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
