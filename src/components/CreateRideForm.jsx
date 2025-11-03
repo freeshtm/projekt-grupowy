@@ -45,7 +45,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
 
         setError('');
 
-        // Nie pozwól dodać więcej niż dwóch punktów
+      
         setPointCount(prevCount => {
           if (prevCount >= 2) {
             setError('Zresetuj punkty, aby wybrać nowe');
