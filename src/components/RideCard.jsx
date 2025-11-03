@@ -28,7 +28,7 @@ function RideCard({ ride, onSelect, isSelected }) {
       completed: 'Zakończony',
       cancelled: 'Anulowany',
     };
-    return labels[status] || status;
+    return labels[status.toLowerCase()] || status;
   };
 
   return (
@@ -40,7 +40,7 @@ function RideCard({ ride, onSelect, isSelected }) {
         <h3>
           {ride.from_address} → {ride.to_address}
         </h3>
-        <span className={`status-badge status-${ride.status}`}>
+        <span className={`status-badge status-${ride.status.toLowerCase()}`}>
           {getStatusLabel(ride.status)}
         </span>
       </div>
@@ -64,7 +64,7 @@ function RideCard({ ride, onSelect, isSelected }) {
         </div>
       </div>
 
-      {isPast && ride.status === 'planned' && (
+      {isPast && ride.status.toLowerCase() === 'planned' && (
         <div className="ride-note">
           Przejazd powinien już się rozpocząć
         </div>

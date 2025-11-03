@@ -61,10 +61,18 @@ function MainPage() {
     fetchRides();
   };
 
+  const handleManageRide = (ride) => {
+    setSelectedRide(ride);
+    setPanelMode('details');
+  };
+
   return (
     <div className="main-page">
       <aside className="left-panel">
-        <UserPanel onLogout={handleLogout} />
+        <UserPanel 
+          onLogout={handleLogout}
+          onManageRide={handleManageRide}
+        />
       </aside>
 
       <main className={`center-panel ${!panelMode ? 'full-width' : ''}`}>
@@ -83,6 +91,7 @@ function MainPage() {
             rides={rides}
             onSelectRide={handleSelectRide}
             selectedRideId={selectedRide?.id}
+            onRefresh={fetchRides}
           />
         )}
       </main>

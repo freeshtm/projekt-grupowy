@@ -1,0 +1,193 @@
+.driver-ride-control {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.driver-ride-control h3 {
+  margin: 0 0 20px 0;
+  color: #212121;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.driver-ride-control h4 {
+  margin: 0 0 14px 0;
+  color: #1e3a5f;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.participants-section,
+.in-progress-section,
+.completed-section,
+.cancelled-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instruction {
+  color: #616161;
+  font-size: 14px;
+  margin: 0;
+  padding: 12px;
+  background: #e3f2fd;
+  border-left: 3px solid #1565c0;
+  border-radius: 2px;
+}
+
+.no-participants {
+  color: #757575;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.participants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+}
+
+.participant-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.participant-item:hover {
+  border-color: #2196f3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.participant-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.participant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.participant-info strong {
+  color: #212121;
+  font-size: 15px;
+}
+
+.joined-date {
+  color: #757575;
+  font-size: 13px;
+}
+
+.selection-summary {
+  padding: 12px;
+  background: #e8f5e9;
+  border-left: 3px solid #4caf50;
+  color: #1b5e20;
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.message {
+  padding: 12px;
+  border-radius: 2px;
+  font-size: 14px;
+  border: 1px solid;
+}
+
+.message.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-color: #81c784;
+}
+
+.message.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border-color: #ef9a9a;
+}
+
+.error-message {
+  padding: 16px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 3px solid #ef5350;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+.start-btn,
+.complete-btn {
+  padding: 14px;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.start-btn {
+  background: #4caf50;
+}
+
+.start-btn:hover:not(:disabled) {
+  background: #43a047;
+}
+
+.complete-btn {
+  background: #2196f3;
+}
+
+.complete-btn:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.start-btn:disabled,
+.complete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #bdbdbd;
+}
+
+.completed-section,
+.cancelled-section {
+  padding: 20px;
+  text-align: center;
+  color: #616161;
+}
+
+.completed-section {
+  background: #e8f5e9;
+  border-left: 3px solid #4caf50;
+}
+
+.cancelled-section {
+  background: #ffebee;
+  border-left: 3px solid #f44336;
+}
