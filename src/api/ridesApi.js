@@ -62,7 +62,7 @@ export const createRide = async (rideData) => {
     return response.data;
   } catch (error) {
     console.error('Create ride error:', error);
-    return { id: Date.now(), ...rideData, status: RideStatus.PLANNED };
+    throw new Error('Nie udało się utworzyć przejazdu. Spróbuj ponownie później.');
   }
 };
 
