@@ -22,7 +22,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef({ from: null, to: null });
-  const [directionsRenderer, setDirectionsRenderer] = useState(null);
+  const directionsRendererRef = useRef(null);
   const [pointCount, setPointCount] = useState(0);
 
   useEffect(() => {
@@ -32,11 +32,10 @@ function CreateRideForm({ onClose, onRideCreated }) {
         zoom: 11,
       });
 
-      const renderer = new window.google.maps.DirectionsRenderer({
+      directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
         map: mapRef.current,
         suppressMarkers: true
       });
-      setDirectionsRenderer(renderer);
 
       const geocoder = new window.google.maps.Geocoder();
 
@@ -87,12 +86,19 @@ function CreateRideForm({ onClose, onRideCreated }) {
 
               // Jeśli wybrano drugi punkt, rysuj trasę
               if (pointType === 'to') {
-                calculateAndDisplayRoute(
-                  formData.from_lat || lat,
-                  formData.from_lng || lng,
-                  lat,
-                  lng
-                );
+                // Pobierz aktualne współrzędne markerów
+                const fromMarker = markersRef.current['from'];
+                const toMarker = markersRef.current['to'] || newMarker;
+                if (fromMarker && toMarker) {
+                  const fromPos = fromMarker.getPosition();
+                  const toPos = toMarker.getPosition();
+                  calculateAndDisplayRoute(
+                    fromPos.lat(),
+                    fromPos.lng(),
+                    toPos.lat(),
+                    toPos.lng()
+                  );
+                }
               }
             } else {
               setError('Nie udało się pobrać adresu');
@@ -110,16 +116,28 @@ function CreateRideForm({ onClose, onRideCreated }) {
   }, [formData]);
 
   const calculateAndDisplayRoute = async (fromLat, fromLng, toLat, toLng) => {
+    console.log('Wywołanie calculateAndDisplayRoute:', { fromLat, fromLng, toLat, toLng });
     const directionsService = new window.google.maps.DirectionsService();
     try {
-      const result = await directionsService.route({
-        origin: { lat: fromLat, lng: fromLng },
-        destination: { lat: toLat, lng: toLng },
-        travelMode: window.google.maps.TravelMode.DRIVING
-      });
-      directionsRenderer.setDirections(result);
+      directionsService.route(
+        {
+          origin: { lat: fromLat, lng: fromLng },
+          destination: { lat: toLat, lng: toLng },
+          travelMode: window.google.maps.TravelMode.DRIVING
+        },
+        (result, status) => {
+          console.log('Status DirectionsService:', status);
+          if (status === 'OK') {
+            if (directionsRendererRef.current) {
+              directionsRendererRef.current.setDirections(result);
+            }
+          } else {
+            setError('Nie udało się wyznaczyć trasy: ' + status);
+          }
+        }
+      );
     } catch (error) {
-      setError('Nie udało się wyznaczyć trasy');
+      setError('Nie udało się wyznaczyć trasy (wyjątek)');
     }
   };
 
@@ -139,8 +157,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
     }));
     setPointCount(0);
     setError('');
-    if (directionsRenderer) {
-      directionsRenderer.setDirections({ routes: [] });
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setDirections({ routes: [] });
     }
   };
 
