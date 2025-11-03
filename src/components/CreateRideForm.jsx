@@ -24,7 +24,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
   const [markers, setMarkers] = useState({ from: null, to: null });
   const [directionsRenderer, setDirectionsRenderer] = useState(null);
   const [pointCount, setPointCount] = useState(0);
-  
+
   useEffect(() => {
     if (mapContainerRef.current && !mapRef.current) {
       mapRef.current = new window.google.maps.Map(mapContainerRef.current, {
@@ -39,60 +39,77 @@ function CreateRideForm({ onClose, onRideCreated }) {
       setDirectionsRenderer(renderer);
 
       const geocoder = new window.google.maps.Geocoder();
-      
-      mapRef.current.addListener('dblclick', async (e) => {
+
+      mapRef.current.addListener('dblclick', (e) => {
         e.stop();
-        
-        if (pointCount >= 2) {
-          setError('Zresetuj punkty aby wybrać nowe');
-          return;
-        }
 
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
-        
-        try {
-          const result = await geocoder.geocode({ location: { lat, lng }, region: 'pl' });
-          const pointType = pointCount === 0 ? 'from' : 'to';
-          const address = result.results[0].formatted_address;
+        setError('');
 
-          if (markers[pointType]) markers[pointType].setMap(null);
+        // Nie pozwól dodać więcej niż dwóch punktów
+        setPointCount(prevCount => {
+          if (prevCount >= 2) {
+            setError('Zresetuj punkty, aby wybrać nowe');
+            return prevCount;
+          }
 
-          const newMarker = new window.google.maps.Marker({
-            position: { lat, lng },
-            map: mapRef.current,
-            icon: {
-              url: pointType === 'from' ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          const pointType = prevCount === 0 ? 'from' : 'to';
+
+          geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              const address = results[0].formatted_address;
+
+              // Usuń poprzedni marker, jeśli istnieje
+              if (markers[pointType]) {
+                markers[pointType].setMap(null);
+              }
+
+              // Dodaj marker
+              const newMarker = new window.google.maps.Marker({
+                position: { lat, lng },
+                map: mapRef.current,
+                icon: {
+                  url:
+                    pointType === 'from'
+                      ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                      : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                },
+              });
+
+              setMarkers(prev => ({ ...prev, [pointType]: newMarker }));
+
+              // Zapisz dane do formData
+              setFormData(prev => ({
+                ...prev,
+                [`${pointType}_address`]: address,
+                [`${pointType}_lat`]: lat,
+                [`${pointType}_lng`]: lng,
+              }));
+
+              // Jeśli wybrano drugi punkt, rysuj trasę
+              if (pointType === 'to') {
+                calculateAndDisplayRoute(
+                  formData.from_lat || lat,
+                  formData.from_lng || lng,
+                  lat,
+                  lng
+                );
+              }
+            } else {
+              setError('Nie udało się pobrać adresu');
             }
           });
 
-          setMarkers(prev => ({ ...prev, [pointType]: newMarker }));
-          setFormData(prev => ({
-            ...prev,
-            [`${pointType}_address`]: address,
-            [`${pointType}_lat`]: lat,
-            [`${pointType}_lng`]: lng
-          }));
-
-          const newPointCount = pointCount + 1;
-          setPointCount(newPointCount);
-          
-          if (newPointCount === 2) {
-            const from = pointType === 'to' ? formData : { lat, lng };
-            const to = pointType === 'to' ? { lat, lng } : formData;
-            calculateAndDisplayRoute(from.from_lat || from.lat, from.from_lng || from.lng, to.to_lat || to.lat, to.to_lng || to.lng);
-          }
-
-        } catch (error) {
-          setError('Nie udało się pobrać adresu');
-        }
+          return prevCount + 1;
+        });
       });
 
       mapRef.current.addListener('mousemove', () => {
         mapContainerRef.current.style.cursor = 'crosshair';
       });
     }
-  }, [pointCount, formData]);
+  }, [formData, markers]);
 
   const calculateAndDisplayRoute = async (fromLat, fromLng, toLat, toLng) => {
     const directionsService = new window.google.maps.DirectionsService();
@@ -124,84 +141,11 @@ function CreateRideForm({ onClose, onRideCreated }) {
       to_lng: 0
     }));
     
-    // Resetuj licznik punktów
     setPointCount(0);
-    setCanAddPoint(true);
-    
-    // Usuń trasę jeśli istnieje
+    setError('');
+
     if (directionsRenderer) {
-      directionsRenderer.setDirections({routes: []});
-    }
-  };
-
-  const handleSuggestionSelect = async (suggestion, type) => {
-    const addressField = type === 'from' ? 'from_address' : 'to_address';
-    const latField = type === 'from' ? 'from_lat' : 'to_lat';
-    const lngField = type === 'from' ? 'from_lng' : 'to_lng';
-
-    try {
-      const location = await geocodeAddress(suggestion.description);
-      setFormData(prev => ({
-        ...prev,
-        [addressField]: location.address,
-        [latField]: location.lat,
-        [lngField]: location.lng
-      }));
-
-      // Aktualizuj marker na mapie
-      const markerType = type === 'from' ? 'from' : 'to';
-      if (markers[markerType]) {
-        markers[markerType].setMap(null);
-      }
-      const newMarker = new window.google.maps.Marker({
-        position: { lat: location.lat, lng: location.lng },
-        map: mapRef.current,
-        title: type === 'from' ? 'Początek' : 'Cel',
-        icon: {
-          url: type === 'from' ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-        }
-      });
-      setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
-
-      // Dostosuj widok mapy
-      const bounds = new window.google.maps.LatLngBounds();
-      Object.values(markers).forEach(marker => {
-        if (marker && marker.getPosition()) {
-          bounds.extend(marker.getPosition());
-        }
-      });
-      bounds.extend(new window.google.maps.LatLng(location.lat, location.lng));
-      mapRef.current.fitBounds(bounds);
-
-      // Jeśli jest tylko jeden marker, ustaw odpowiedni zoom
-      if (Object.values(markers).filter(m => m).length === 1) {
-        mapRef.current.setZoom(13);
-      }
-
-      // Jeśli mamy oba punkty, wyznacz trasę
-      if (type === 'to' && formData.from_lat && formData.from_lng) {
-        calculateAndDisplayRoute(
-          formData.from_lat,
-          formData.from_lng,
-          location.lat,
-          location.lng
-        );
-      } else if (type === 'from' && formData.to_lat && formData.to_lng) {
-        calculateAndDisplayRoute(
-          location.lat,
-          location.lng,
-          formData.to_lat,
-          formData.to_lng
-        );
-      }
-
-      if (type === 'from') {
-        setFromSuggestions([]);
-      } else {
-        setToSuggestions([]);
-      }
-    } catch (error) {
-      setError('Błąd podczas pobierania współrzędnych: ' + error.message);
+      directionsRenderer.setDirections({ routes: [] });
     }
   };
 
@@ -244,9 +188,11 @@ function CreateRideForm({ onClose, onRideCreated }) {
         {error && <div className="error-message">{error}</div>}
 
         <div className="map-instruction">
-          {pointCount === 0 ? 'Kliknij dwukrotnie aby wybrać początek' :
-           pointCount === 1 ? 'Kliknij dwukrotnie aby wybrać cel' :
-           'Wybrano oba punkty'}
+          {pointCount === 0
+            ? 'Kliknij dwukrotnie, aby wybrać początek'
+            : pointCount === 1
+            ? 'Kliknij dwukrotnie, aby wybrać cel'
+            : 'Wybrano oba punkty'}
         </div>
 
         <div className="form-group">
