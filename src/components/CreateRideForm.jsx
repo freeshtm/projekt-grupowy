@@ -21,7 +21,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
   
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
-  const [markers, setMarkers] = useState({ from: null, to: null });
+  const markersRef = useRef({ from: null, to: null });
   const [directionsRenderer, setDirectionsRenderer] = useState(null);
   const [pointCount, setPointCount] = useState(0);
 
@@ -40,12 +40,10 @@ function CreateRideForm({ onClose, onRideCreated }) {
 
       const geocoder = new window.google.maps.Geocoder();
 
-      mapRef.current.addListener('dblclick', (e) => {
+  mapRef.current.addListener('dblclick', (e) => {
         e.stop();
 
         setError('');
-
-      
         setPointCount(prevCount => {
           if (prevCount >= 2) {
             setError('Zresetuj punkty, aby wybrać nowe');
@@ -61,8 +59,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
               const address = results[0].formatted_address;
 
               // Usuń poprzedni marker, jeśli istnieje
-              if (markers[pointType]) {
-                markers[pointType].setMap(null);
+              if (markersRef.current[pointType]) {
+                markersRef.current[pointType].setMap(null);
               }
 
               // Dodaj marker
@@ -77,7 +75,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
                 },
               });
 
-              setMarkers(prev => ({ ...prev, [pointType]: newMarker }));
+              markersRef.current[pointType] = newMarker;
 
               // Zapisz dane do formData
               setFormData(prev => ({
@@ -109,7 +107,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
         mapContainerRef.current.style.cursor = 'crosshair';
       });
     }
-  }, [formData, markers]);
+  }, [formData]);
 
   const calculateAndDisplayRoute = async (fromLat, fromLng, toLat, toLng) => {
     const directionsService = new window.google.maps.DirectionsService();
@@ -126,11 +124,10 @@ function CreateRideForm({ onClose, onRideCreated }) {
   };
 
   const resetPoints = () => {
-    Object.values(markers).forEach(marker => {
+    Object.values(markersRef.current).forEach(marker => {
       if (marker) marker.setMap(null);
     });
-    
-    setMarkers({ from: null, to: null });
+    markersRef.current = { from: null, to: null };
     setFormData(prev => ({
       ...prev,
       from_address: '',
@@ -140,10 +137,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
       to_lat: 0,
       to_lng: 0
     }));
-    
     setPointCount(0);
     setError('');
-
     if (directionsRenderer) {
       directionsRenderer.setDirections({ routes: [] });
     }
