@@ -18,7 +18,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
     price_per_seat: '',
     seats_available: ''
   });
-  
+
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef({ from: null, to: null });
@@ -39,125 +39,164 @@ function CreateRideForm({ onClose, onRideCreated }) {
 
       const geocoder = new window.google.maps.Geocoder();
 
-  mapRef.current.addListener('dblclick', (e) => {
+    
+      mapRef.current.addListener('dblclick', (e) => {
         e.stop();
-
         setError('');
-        setPointCount(prevCount => {
-          if (prevCount >= 2) {
-            setError('Zresetuj punkty, aby wybrać nowe');
-            return prevCount;
+
+        const hasFrom = !!markersRef.current.from;
+        const hasTo = !!markersRef.current.to;
+
+        let pointType;
+        if (!hasFrom) pointType = 'from';
+        else if (!hasTo) pointType = 'to';
+        else {
+          setError('Usuń istniejący punkt, aby dodać nowy');
+          return;
+        }
+
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+
+        geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            const address = results[0].formatted_address;
+            setMarkerAndData(lat, lng, address, pointType);
+          } else {
+            setError('Nie udało się pobrać adresu');
           }
-
-          const lat = e.latLng.lat();
-          const lng = e.latLng.lng();
-          const pointType = prevCount === 0 ? 'from' : 'to';
-
-          geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              const address = results[0].formatted_address;
-
-              // Usuń poprzedni marker, jeśli istnieje
-              if (markersRef.current[pointType]) {
-                markersRef.current[pointType].setMap(null);
-              }
-
-              // Dodaj marker
-              const newMarker = new window.google.maps.Marker({
-                position: { lat, lng },
-                map: mapRef.current,
-                icon: {
-                  url:
-                    pointType === 'from'
-                      ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                      : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                },
-              });
-
-              markersRef.current[pointType] = newMarker;
-
-              // Zapisz dane do formData
-              setFormData(prev => ({
-                ...prev,
-                [`${pointType}_address`]: address,
-                [`${pointType}_lat`]: lat,
-                [`${pointType}_lng`]: lng,
-              }));
-
-              // Jeśli wybrano drugi punkt, rysuj trasę
-              if (pointType === 'to') {
-                // Pobierz aktualne współrzędne markerów
-                const fromMarker = markersRef.current['from'];
-                const toMarker = markersRef.current['to'] || newMarker;
-                if (fromMarker && toMarker) {
-                  const fromPos = fromMarker.getPosition();
-                  const toPos = toMarker.getPosition();
-                  calculateAndDisplayRoute(
-                    fromPos.lat(),
-                    fromPos.lng(),
-                    toPos.lat(),
-                    toPos.lng()
-                  );
-                }
-              }
-            } else {
-              setError('Nie udało się pobrać adresu');
-            }
-          });
-
-          return prevCount + 1;
         });
       });
 
       mapRef.current.addListener('mousemove', () => {
         mapContainerRef.current.style.cursor = 'crosshair';
       });
-    }
-  }, [formData]);
 
-  const calculateAndDisplayRoute = async (fromLat, fromLng, toLat, toLng) => {
-    console.log('Wywołanie calculateAndDisplayRoute:', { fromLat, fromLng, toLat, toLng });
-    const directionsService = new window.google.maps.DirectionsService();
-    try {
-      directionsService.route(
-        {
-          origin: { lat: fromLat, lng: fromLng },
-          destination: { lat: toLat, lng: toLng },
-          travelMode: window.google.maps.TravelMode.DRIVING
-        },
-        (result, status) => {
-          console.log('Status DirectionsService:', status);
-          if (status === 'OK') {
-            if (directionsRendererRef.current) {
-              directionsRendererRef.current.setDirections(result);
-            }
-          } else {
-            setError('Nie udało się wyznaczyć trasy: ' + status);
+
+      const fromInput = document.getElementById('from-address');
+      const toInput = document.getElementById('to-address');
+
+      if (fromInput && toInput && window.google?.maps?.places) {
+        const fromAutocomplete = new window.google.maps.places.Autocomplete(fromInput, {
+          fields: ['geometry', 'formatted_address'],
+          componentRestrictions: { country: 'pl' }
+        });
+
+        const toAutocomplete = new window.google.maps.places.Autocomplete(toInput, {
+          fields: ['geometry', 'formatted_address'],
+          componentRestrictions: { country: 'pl' }
+        });
+
+        fromAutocomplete.addListener('place_changed', () => {
+          const place = fromAutocomplete.getPlace();
+          if (place.geometry) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            setMarkerAndData(lat, lng, place.formatted_address, 'from');
           }
-        }
+        });
+
+        toAutocomplete.addListener('place_changed', () => {
+          const place = toAutocomplete.getPlace();
+          if (place.geometry) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            setMarkerAndData(lat, lng, place.formatted_address, 'to');
+          }
+        });
+      }
+    }
+  }, []);
+
+  const setMarkerAndData = (lat, lng, address, type) => {
+    if (markersRef.current[type]) {
+      markersRef.current[type].setMap(null);
+    }
+
+    const newMarker = new window.google.maps.Marker({
+      position: { lat, lng },
+      map: mapRef.current,
+      icon: {
+        url:
+          type === 'from'
+            ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+            : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+      }
+    });
+
+    markersRef.current[type] = newMarker;
+
+    setFormData(prev => ({
+      ...prev,
+      [`${type}_address`]: address,
+      [`${type}_lat`]: lat,
+      [`${type}_lng`]: lng
+    }));
+
+    updatePointCount();
+
+    mapRef.current.panTo({ lat, lng });
+    mapRef.current.setZoom(13);
+
+    const fromMarker = markersRef.current['from'];
+    const toMarker = markersRef.current['to'];
+
+    if (fromMarker && toMarker) {
+      const fromPos = fromMarker.getPosition();
+      const toPos = toMarker.getPosition();
+      calculateAndDisplayRoute(
+        fromPos.lat(),
+        fromPos.lng(),
+        toPos.lat(),
+        toPos.lng()
       );
-    } catch (error) {
-      setError('Nie udało się wyznaczyć trasy (wyjątek)');
     }
   };
 
-  const resetPoints = () => {
-    Object.values(markersRef.current).forEach(marker => {
-      if (marker) marker.setMap(null);
-    });
-    markersRef.current = { from: null, to: null };
+  const updatePointCount = () => {
+    const hasFrom = !!markersRef.current.from;
+    const hasTo = !!markersRef.current.to;
+    if (hasFrom && hasTo) setPointCount(2);
+    else if (hasFrom || hasTo) setPointCount(1);
+    else setPointCount(0);
+  };
+
+  const calculateAndDisplayRoute = (fromLat, fromLng, toLat, toLng) => {
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: { lat: fromLat, lng: fromLng },
+        destination: { lat: toLat, lng: toLng },
+        travelMode: window.google.maps.TravelMode.DRIVING
+      },
+      (result, status) => {
+        if (status === 'OK') {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          setError('Nie udało się wyznaczyć trasy: ' + status);
+        }
+      }
+    );
+  };
+
+  const clearPoint = (type) => {
+    if (markersRef.current[type]) {
+      markersRef.current[type].setMap(null);
+      markersRef.current[type] = null;
+    }
+
     setFormData(prev => ({
       ...prev,
-      from_address: '',
-      to_address: '',
-      from_lat: 0,
-      from_lng: 0,
-      to_lat: 0,
-      to_lng: 0
+      [`${type}_address`]: '',
+      [`${type}_lat`]: 0,
+      [`${type}_lng`]: 0
     }));
-    setPointCount(0);
-    setError('');
-    if (directionsRendererRef.current) {
+
+    updatePointCount();
+
+    const fromMarker = markersRef.current['from'];
+    const toMarker = markersRef.current['to'];
+    if (!fromMarker || !toMarker) {
       directionsRendererRef.current.setDirections({ routes: [] });
     }
   };
@@ -202,38 +241,64 @@ function CreateRideForm({ onClose, onRideCreated }) {
 
         <div className="map-instruction">
           {pointCount === 0
-            ? 'Kliknij dwukrotnie, aby wybrać początek'
+            ? 'Kliknij dwukrotnie lub wpisz, aby wybrać początek'
             : pointCount === 1
-            ? 'Kliknij dwukrotnie, aby wybrać cel'
+            ? 'Kliknij dwukrotnie lub wpisz, aby wybrać cel'
             : 'Wybrano oba punkty'}
         </div>
 
-        <div className="form-group">
+        
+        <div className="form-group address-input">
           <label>Miejsce wyjazdu:</label>
-          <input
-            type="text"
-            value={formData.from_address}
-            readOnly
-            placeholder="Punkt początkowy zostanie wybrany na mapie"
-          />
+          <div className="input-with-clear">
+            <input
+              id="from-address"
+              type="text"
+              name="from_address"
+              value={formData.from_address}
+              onChange={handleChange}
+              placeholder="Wpisz lub wybierz punkt na mapie..."
+              required
+            />
+            {formData.from_address && (
+              <button
+                type="button"
+                className="clear-btn"
+                onClick={() => clearPoint('from')}
+                title="Usuń punkt początkowy"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="form-group">
+        <div className="form-group address-input">
           <label>Miejsce docelowe:</label>
-          <input
-            type="text"
-            value={formData.to_address}
-            readOnly
-            placeholder="Punkt docelowy zostanie wybrany na mapie"
-          />
+          <div className="input-with-clear">
+            <input
+              id="to-address"
+              type="text"
+              name="to_address"
+              value={formData.to_address}
+              onChange={handleChange}
+              placeholder="Wpisz lub wybierz punkt na mapie..."
+              required
+            />
+            {formData.to_address && (
+              <button
+                type="button"
+                className="clear-btn"
+                onClick={() => clearPoint('to')}
+                title="Usuń punkt docelowy"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="map-container" ref={mapContainerRef}></div>
-        
-        <input type="hidden" name="from_lat" value={formData.from_lat} />
-        <input type="hidden" name="from_lng" value={formData.from_lng} />
-        <input type="hidden" name="to_lat" value={formData.to_lat} />
-        <input type="hidden" name="to_lng" value={formData.to_lng} />
 
         <div className="form-group">
           <label>Data i czas wyjazdu:</label>
@@ -274,21 +339,10 @@ function CreateRideForm({ onClose, onRideCreated }) {
         </div>
 
         <div className="form-actions">
-          <button 
-            type="button" 
-            onClick={resetPoints}
-            className="reset-btn"
-          >
-            Resetuj punkty
-          </button>
           <button type="button" onClick={onClose} className="cancel-btn">
             Anuluj
           </button>
-          <button 
-            type="submit" 
-            disabled={pointCount < 2} 
-            className="submit-btn"
-          >
+          <button type="submit" disabled={pointCount < 2} className="submit-btn">
             Utwórz Przejazd
           </button>
         </div>
@@ -298,4 +352,3 @@ function CreateRideForm({ onClose, onRideCreated }) {
 }
 
 export default CreateRideForm;
-//tt

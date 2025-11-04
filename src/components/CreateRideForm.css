@@ -217,3 +217,29 @@ input[readonly] {
   background-color: #f8f8f8;
   cursor: default;
 }
+
+.input-with-clear {
+  position: relative;
+}
+
+.input-with-clear input {
+  width: 100%;
+  padding-right: 28px;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #777;
+}
+
+.clear-btn:hover {
+  color: #000;
+}
+
