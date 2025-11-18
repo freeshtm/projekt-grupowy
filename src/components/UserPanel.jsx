@@ -7,6 +7,7 @@ import { MdStar, MdStarBorder, MdLogout, MdDirectionsCar } from 'react-icons/md'
 
 function UserPanel({ onLogout, onManageRide }) {
   const { currentUser } = useUser();
+  console.log('currentUser (UserPanel):', currentUser);
   const [userProfile, setUserProfile] = useState(null);
   const [recentRides, setRecentRides] = useState([]);
 
@@ -50,9 +51,9 @@ function UserPanel({ onLogout, onManageRide }) {
     <div className="user-panel">
       <div className="user-profile">
         <div className="profile-avatar">
-          {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+          {(userProfile?.username || currentUser?.email)?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <h3>{currentUser?.username || 'Użytkownik'}</h3>
+        <h3>{userProfile?.username || currentUser?.email || 'Użytkownik'}</h3>
         <p className="user-email">{currentUser?.email}</p>
         
         {userProfile?.average_rating && (
@@ -83,7 +84,7 @@ function UserPanel({ onLogout, onManageRide }) {
                     {ride.status.toLowerCase() === 'cancelled' && 'Anulowany'}
                   </div>
                 </div>
-                {ride.status.toLowerCase() !== 'completed' && ride.status.toLowerCase() !== 'cancelled' && ride.driver_id === currentUser?.id && onManageRide && (
+                {ride.status.toLowerCase() !== 'completed' && ride.status.toLowerCase() !== 'cancelled' && onManageRide && (
                   <button 
                     className="manage-ride-btn"
                     onClick={() => onManageRide(ride)}
