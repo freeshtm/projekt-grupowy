@@ -444,3 +444,4 @@ function RideDetails({ ride, onClose, onJoined }) {
 }
 
 export default RideDetails;
+//
