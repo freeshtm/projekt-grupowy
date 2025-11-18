@@ -64,7 +64,7 @@ export const leaveRide = async (rideId, passengerId) => {
   return response.data;
 };
 
-export const getUserRides = async (userId, limit = 3) => {
+export const getUserRides = async (userId, limit) => {
   const response = await axios.get(buildUrl(`/users/${userId}/rides`), {
     params: { limit },
   });
