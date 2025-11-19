@@ -1,8 +1,10 @@
 .ride-list {
   height: 100%;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   background-color: #fafafa;
+  overflow: hidden;
 }
 
 .ride-list-header {
@@ -10,6 +12,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .ride-list h2 {
@@ -48,6 +51,8 @@
 .rides-container {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .empty-state {

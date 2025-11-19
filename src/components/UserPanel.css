@@ -64,6 +64,9 @@
 
 .recent-rides {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .recent-rides h4 {
@@ -82,6 +85,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 5px;
 }
 
 .recent-rides li {
@@ -191,6 +197,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .logout-btn:hover {
