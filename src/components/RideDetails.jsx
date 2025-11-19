@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { joinRide, leaveRide, getParticipants, startRide, cancelRide, completeRide } from '../api/ridesApi';
+import { joinRide, leaveRide, getParticipants, startRide, cancelRide, completeRide, getUserRides } from '../api/ridesApi';
 import { useUser } from '../context/UserContext';
 import RatingForm from './RatingForm';
 import './RideDetails.css';
@@ -15,12 +15,34 @@ function RideDetails({ ride, onClose, onJoined }) {
   const [showParticipantSelector, setShowParticipantSelector] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [showRatingForm, setShowRatingForm] = useState(false);
+  
+    const [userRides, setUserRides] = useState([]);
 
   useEffect(() => {
     fetchParticipants();
+    //console.log('ID USERA::::::', currentUser?.id);
   }, [ride.id, currentUser?.id]);
 
-  
+  const fetchUserRides = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const data = await getUserRides(currentUser.id);
+          //console.log("DATA:",data);
+      setUserRides(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Błąd pobierania user rides:', err);
+    }
+  };
+    useEffect(() => {
+    fetchUserRides();
+  }, [currentUser?.id]);
+
+  const isRatedForThisRide = (() => {
+         //console.log("USERRIDES: ",userRides);
+    const ur = userRides.find(r => r.id === ride.id);
+    if (typeof ur?.rated !== 'undefined') return Boolean(ur.rated);
+    return Boolean(ride?.rated);
+  })();
 
   const fetchParticipants = async () => {
     try {
@@ -282,13 +304,15 @@ function RideDetails({ ride, onClose, onJoined }) {
             <div className="participant-status">
               ✅ Przejazd zakończony
             </div>
+            {!isRatedForThisRide && (  
             <button 
               className="rate-ride-btn" 
               onClick={() => setShowRatingForm(true)}
             >
               Oceń przejazd
             </button>
-          </div>
+            )}
+          </div> 
         )}
 
         {isDriverCurrentUser && ride.status.toLowerCase() === 'planned' && (
@@ -420,3 +444,4 @@ function RideDetails({ ride, onClose, onJoined }) {
 }
 
 export default RideDetails;
+//
