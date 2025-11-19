@@ -24,7 +24,10 @@ function MainPage() {
     setLoading(true);
     try {
       const ridesData = await getAllRides();
-      setRides(ridesData);
+      const sortedRides = ridesData.sort((a, b) => {
+        return new Date(b.departure_time) - new Date(a.departure_time);
+      });
+      setRides(sortedRides);
     } catch (error) {
       console.error('Error fetching rides:', error);
     } finally {
