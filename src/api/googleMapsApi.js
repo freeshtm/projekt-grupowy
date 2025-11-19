@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { GOOGLE_MAPS_API_KEY } from './config';
 
-// Funkcja do geokodowania adresu (zamiana adresu na współrzędne)
 export const geocodeAddress = async (address) => {
   try {
     const response = await axios.get(
@@ -25,7 +24,6 @@ export const geocodeAddress = async (address) => {
   }
 };
 
-// Funkcja do obliczania odległości między dwoma punktami
 export const calculateDistance = async (origin, destination) => {
   try {
     const response = await axios.get(
@@ -42,8 +40,8 @@ export const calculateDistance = async (origin, destination) => {
       return {
         distance: distance.text,
         duration: duration.text,
-        distanceValue: distance.value, // odległość w metrach
-        durationValue: duration.value, // czas w sekundach
+        distanceValue: distance.value,
+        durationValue: duration.value, 
       };
     } else {
       throw new Error('Nie udało się obliczyć odległości');
@@ -53,7 +51,6 @@ export const calculateDistance = async (origin, destination) => {
   }
 };
 
-// Funkcja do autouzupełniania adresów
 export const getPlacePredictions = async (input) => {
   try {
     const response = await axios.get(

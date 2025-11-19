@@ -3,6 +3,7 @@ import { joinRide, leaveRide, getParticipants, startRide, cancelRide, completeRi
 import { useUser } from '../context/UserContext';
 import RatingForm from './RatingForm';
 import './RideDetails.css';
+import RideMap from './RideMap';
 import { MdClose, MdLocationOn, MdFlag, MdAccessTime, MdPerson, MdAttachMoney, MdEventSeat, MdInfo, MdPlayArrow, MdExitToApp } from 'react-icons/md';
 
 function RideDetails({ ride, onClose, onJoined }) {
@@ -18,6 +19,8 @@ function RideDetails({ ride, onClose, onJoined }) {
   useEffect(() => {
     fetchParticipants();
   }, [ride.id, currentUser?.id]);
+
+  
 
   const fetchParticipants = async () => {
     try {
@@ -47,9 +50,7 @@ function RideDetails({ ride, onClose, onJoined }) {
       setTimeout(() => {
         setMessage('');
       }, 3000);
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Błąd podczas dołączania do przejazdu.';
-      setMessage(errorMsg);
+              <RideMap ride={ride} />
     } finally {
       setLoading(false);
     }
@@ -198,6 +199,7 @@ function RideDetails({ ride, onClose, onJoined }) {
               </div>
             </div>
           </div>
+          <RideMap ride={ride} />
         </div>
 
         <div className="detail-section">
