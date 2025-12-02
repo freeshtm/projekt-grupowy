@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { buildUrl } from './config';
 
-export const getAllRides = async () => {
-  const response = await axios.get(buildUrl('/rides'));
+export const getAllRides = async (filters = {}) => {
+  const response = await axios.get(buildUrl('/rides'), {
+    params: {
+      origin: filters.origin,
+      destination: filters.destination,
+      date: filters.date,
+    },
+  });
   return response.data;
 };
 
