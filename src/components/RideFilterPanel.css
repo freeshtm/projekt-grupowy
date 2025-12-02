@@ -1,0 +1,95 @@
+.filters-panel {
+  background-color: #ffffff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+  margin-bottom: 20px; 
+}
+
+.filters-header h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.filter-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  gap: 8px;               
+  padding: 12px 24px;      
+  border-radius: 3px;      
+  font-size: 15px;         
+  font-weight: 600;        
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+
+.filter-btn.apply {
+  background-color: #1e3a5f;
+  color: #ffffff;
+}
+
+.filter-btn.apply:hover {
+  background-color: #2d5a8f; 
+}
+
+
+.filter-btn.clear {
+  background-color: #ffffff;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 11px 23px; 
+}
+
+.filter-btn.clear:hover {
+  background-color: #f5f5f5;
+  color: #333;
+  border-color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-actions {
+    justify-content: stretch;
+  }
+  
+  .filter-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

@@ -5,6 +5,8 @@ import { getAllRides } from '../api/ridesApi';
 import UserPanel from '../components/UserPanel';
 import RideList from '../components/RideList';
 import DynamicPanel from '../components/DynamicPanel';
+import RideFilterPanel from '../components/RideFilterPanel';
+import LogoutModal from '../components/LogoutModal';
 import './MainPage.css';
 import { MdAdd } from 'react-icons/md';
 
@@ -14,20 +16,25 @@ function MainPage() {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRide, setSelectedRide] = useState(null);
-  const [panelMode, setPanelMode] = useState(null); // null, 'create', 'details'
+  const [panelMode, setPanelMode] = useState(null);
+  
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const [filterInput, setFilterInput] = useState({
+    origin: '',
+    destination: '',
+    date: ''
+  });
 
   useEffect(() => {
     fetchRides();
   }, []);
 
-  const fetchRides = async () => {
+  const fetchRides = async (filters = {}) => {
     setLoading(true);
     try {
-      const ridesData = await getAllRides();
-      const sortedRides = ridesData.sort((a, b) => {
-        return new Date(b.departure_time) - new Date(a.departure_time);
-      });
-      setRides(sortedRides);
+      const ridesData = await getAllRides(filters);
+      setRides(ridesData);
     } catch (error) {
       console.error('Error fetching rides:', error);
     } finally {
@@ -35,9 +42,19 @@ function MainPage() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setIsLogoutModalOpen(false);
     logout();
     navigate('/login');
+  };
+
+
+  const handleCancelLogout = () => {
+    setIsLogoutModalOpen(false);
   };
 
   const handleSelectRide = (ride) => {
@@ -56,12 +73,11 @@ function MainPage() {
   };
 
   const handleRideCreated = (newRide) => {
-    setRides([newRide, ...rides]);
-    fetchRides();
+    fetchRides(filterInput); 
   };
 
   const handleRideJoined = () => {
-    fetchRides();
+    fetchRides(filterInput);
   };
 
   const handleManageRide = (ride) => {
@@ -69,17 +85,44 @@ function MainPage() {
     setPanelMode('details');
   };
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInput(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    fetchRides(filterInput);
+  };
+
+  const handleClearFilters = () => {
+    const emptyFilters = { origin: '', destination: '', date: '' };
+    setFilterInput(emptyFilters);
+    fetchRides({});
+  };
+
   return (
     <div className="main-page">
+      <LogoutModal 
+        isOpen={isLogoutModalOpen}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+      />
+
       <aside className="left-panel">
         <UserPanel 
-          onLogout={handleLogout}
+          onLogout={handleLogoutClick}
           onManageRide={handleManageRide}
         />
       </aside>
 
       <main className={`center-panel ${!panelMode ? 'full-width' : ''}`}>
         <div className="center-header">
+          <RideFilterPanel 
+            filterValues={filterInput}
+            onFilterChange={handleFilterChange}
+            onApplyFilters={handleApplyFilters}
+            onClearFilters={handleClearFilters}
+          />
           <button className="create-ride-btn" onClick={handleCreateClick}>
             <MdAdd /> Utwórz Przejazd
           </button>
@@ -94,7 +137,7 @@ function MainPage() {
             rides={rides}
             onSelectRide={handleSelectRide}
             selectedRideId={selectedRide?.id}
-            onRefresh={fetchRides}
+            onRefresh={() => fetchRides(filterInput)}
           />
         )}
       </main>
