@@ -4,6 +4,30 @@ import { useUser } from '../context/UserContext';
 import './CreateRideForm.css';
 import { MdClose } from 'react-icons/md';
 
+const extractCityFromGoogleResult = (geocodingResult) => {
+  if (!geocodingResult || !geocodingResult.address_components) {
+    return '';
+  }
+
+  const localityComponent = geocodingResult.address_components.find(
+    component => component.types.includes('locality')
+  );
+  
+  if (localityComponent) {
+    return localityComponent.long_name;
+  }
+
+  const adminArea2 = geocodingResult.address_components.find(
+    component => component.types.includes('administrative_area_level_2')
+  );
+  
+  if (adminArea2) {
+    return adminArea2.long_name;
+  }
+
+  return '';
+};
+
 function CreateRideForm({ onClose, onRideCreated }) {
   const { currentUser } = useUser();
   const [error, setError] = useState('');
@@ -14,6 +38,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
     from_lng: 0,
     to_lat: 0,
     to_lng: 0,
+    startCity: '',
+    endCity: '',
     departure_time: '',
     price_per_seat: '',
     seats_available: ''
@@ -61,7 +87,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
         geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
           if (status === 'OK' && results[0]) {
             const address = results[0].formatted_address;
-            setMarkerAndData(lat, lng, address, pointType);
+            const city = extractCityFromGoogleResult(results[0]);
+            setMarkerAndData(lat, lng, address, pointType, city);
           } else {
             setError('Nie udało się pobrać adresu');
           }
@@ -92,7 +119,12 @@ function CreateRideForm({ onClose, onRideCreated }) {
           if (place.geometry) {
             const lat = place.geometry.location.lat();
             const lng = place.geometry.location.lng();
-            setMarkerAndData(lat, lng, place.formatted_address, 'from');
+            geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
+              if (status === 'OK' && results[0]) {
+                const city = extractCityFromGoogleResult(results[0]);
+                setMarkerAndData(lat, lng, place.formatted_address, 'from', city);
+              }
+            });
           }
         });
 
@@ -101,14 +133,19 @@ function CreateRideForm({ onClose, onRideCreated }) {
           if (place.geometry) {
             const lat = place.geometry.location.lat();
             const lng = place.geometry.location.lng();
-            setMarkerAndData(lat, lng, place.formatted_address, 'to');
+            geocoder.geocode({ location: { lat, lng }, region: 'pl' }, (results, status) => {
+              if (status === 'OK' && results[0]) {
+                const city = extractCityFromGoogleResult(results[0]);
+                setMarkerAndData(lat, lng, place.formatted_address, 'to', city);
+              }
+            });
           }
         });
       }
     }
   }, []);
 
-  const setMarkerAndData = (lat, lng, address, type) => {
+  const setMarkerAndData = (lat, lng, address, type, city = '') => {
     if (markersRef.current[type]) {
       markersRef.current[type].setMap(null);
     }
@@ -130,7 +167,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
       ...prev,
       [`${type}_address`]: address,
       [`${type}_lat`]: lat,
-      [`${type}_lng`]: lng
+      [`${type}_lng`]: lng,
+      [`${type === 'from' ? 'startCity' : 'endCity'}`]: city
     }));
 
     updatePointCount();
@@ -189,7 +227,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
       ...prev,
       [`${type}_address`]: '',
       [`${type}_lat`]: 0,
-      [`${type}_lng`]: 0
+      [`${type}_lng`]: 0,
+      [`${type === 'from' ? 'startCity' : 'endCity'}`]: ''
     }));
 
     updatePointCount();
