@@ -38,8 +38,8 @@ function CreateRideForm({ onClose, onRideCreated }) {
     from_lng: 0,
     to_lat: 0,
     to_lng: 0,
-    startCity: '',
-    endCity: '',
+    start_city: '',
+    end_city: '',
     departure_time: '',
     price_per_seat: '',
     seats_available: ''
@@ -168,7 +168,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
       [`${type}_address`]: address,
       [`${type}_lat`]: lat,
       [`${type}_lng`]: lng,
-      [`${type === 'from' ? 'startCity' : 'endCity'}`]: city
+      [`${type === 'from' ? 'start_city' : 'end_city'}`]: city
     }));
 
     updatePointCount();
@@ -228,7 +228,7 @@ function CreateRideForm({ onClose, onRideCreated }) {
       [`${type}_address`]: '',
       [`${type}_lat`]: 0,
       [`${type}_lng`]: 0,
-      [`${type === 'from' ? 'startCity' : 'endCity'}`]: ''
+      [`${type === 'from' ? 'start_city' : 'end_city'}`]: ''
     }));
 
     updatePointCount();
