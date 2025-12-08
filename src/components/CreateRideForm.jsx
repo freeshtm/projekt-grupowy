@@ -14,7 +14,7 @@ const extractCityFromGoogleResult = (geocodingResult) => {
   );
   
   if (localityComponent) {
-    return localityComponent.long_name;
+    return localityComponent.long_name.toLowerCase();
   }
 
   const adminArea2 = geocodingResult.address_components.find(
@@ -22,7 +22,7 @@ const extractCityFromGoogleResult = (geocodingResult) => {
   );
   
   if (adminArea2) {
-    return adminArea2.long_name;
+    return adminArea2.long_name.toLowerCase();
   }
 
   return '';
