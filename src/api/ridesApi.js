@@ -2,13 +2,21 @@ import axios from 'axios';
 import { buildUrl } from './config';
 
 export const getAllRides = async (filters = {}) => {
-  const response = await axios.get(buildUrl('/rides'), {
-    params: {
-      origin: filters.origin,
-      destination: filters.destination,
-      date: filters.date,
-    },
-  });
+  const params = {};
+
+  if (filters.origin) {
+    params.origin = filters.origin.toLowerCase();
+  }
+
+  if (filters.destination) {
+    params.destination = filters.destination.toLowerCase();
+  }
+
+  if (filters.date) {
+    params.date = filters.date;
+  }
+
+  const response = await axios.get(buildUrl('/rides'), { params });
   return response.data;
 };
 
